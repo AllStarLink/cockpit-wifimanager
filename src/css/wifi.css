@@ -1,0 +1,48 @@
+body {
+	font-family: "RedHatText", "Overpass", overpass, helvetica, arial, sans-serif;
+	font-variant-numeric: tabular-nums;
+	padding: 10px;
+}
+
+header {
+	font-size: 1.2em;
+	border-bottom-style: solid;
+	border-bottom-width: 1px;
+	margin-bottom: 5px;
+}
+
+.wifi-scan-error {
+	color: red;
+	text-decoration: bold;
+}
+
+.wifi-scan-loader-box {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: 53px;
+	width: 53px;
+	background: black;
+	color: white;
+	padding: 5px;
+}
+
+.wifi-scan-loader {
+    width: 48px;
+    height: 48px;
+    border: 5px solid #e0e0e0;
+    border-bottom-color: rgb(115,181,31);
+    border-radius: 50%;
+    display: inline-block;
+    box-sizing: border-box;
+    animation: rotation 1s linear infinite;
+    }
+
+    @keyframes rotation {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+} 

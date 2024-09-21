@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WiFi Manager</title>
+    <meta charset="utf-8">
+	<link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
+	<link rel="stylesheet" type="text/css" href="css/wifi.css">
+</head>
+<body>
+    <main>
+		<div class="container">
+			<div class="row">
+				<div class="col">
+					<div class="shadow-sm p-3 mb-5 rounded">
+						<h3>Available Networks</h3>
+						<div id="scan-results" class="scan-results">
+							<i>No current scan</i>
+				        </div>
+						<button id="wifi-scan-btn" class="btn btn-primary">Scan for WiFi Networks</button>
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col">
+					<div class="shadow-sm p-3 mb-5 rounded">
+						<h3>Add WiFi Network</h3>
+						<div class="row g-3">
+							<div class="col-md-6">
+								<label for="wifi-ssid" class="form-label">Network Name:</label>
+								<input type="text" id="wifi-ssid" name="wifi-ssid" class="form-control"
+									aria-describedby="wifi-ssid-help"></input>
+								<div id=wifi-ssid-help" class="form-text">Adding an SSID that already exists will result 
+									in the original SSID being replaced.</div>
+							</div>
+							<div class="col-md-6">
+								<label for="wifi-key" class="form-label">Network Password:</label>
+								<input type="password" id="wifi-key" name="wifi-key" class="form-control"
+									aria-describedby="passwordHtml"></input>
+							</div>
+							<div class="col-md-8">
+								<button id="set-wifi-btn" class="btn btn-primary">Save Network</button>
+								<div id="set-wifi-results" class="set-wifi-results"></div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col">
+					<div class="shadow-sm p-3 mb-5 rounded">
+						<h3>Configured WiFi Networks</h3>
+						<div class="px-5" id="wifi-conn-list"></div>
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col">
+					<div class="shadow-sm p-3 mb-5 rounded">
+						<h3>Delete Network</h3>
+						<div class="row">
+							<div class="col-6">
+								<label for="wifi-ssid-del" class="form-label">Network Name:</label>
+								<input type="text" id="wifi-ssid-del" class="form-control"></input>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-md-12">
+								<button id="del-wifi-btn" class="btn btn-primary">Delete Network</button>
+								<div id="del-wifi-results" class="del-wifi-results"></div>		
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+    </main>
+    <script src="../base1/cockpit.js"></script>
+	<script src="js/bootstrap.min.js"></script>
+    <script src="js/wifi.js"></script>
+</body>
+</html>
