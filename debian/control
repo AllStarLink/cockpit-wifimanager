@@ -11,6 +11,6 @@ Rules-Requires-Root: binary-targets
 
 Package: cockpit-wifimanager
 Architecture: all
-Depends: ${misc:Depends}, patch
-Description: Maintain the ASL node database file
-  in /var/lib/asterisk/rpt_extnodes
+Depends: ${misc:Depends}, cockpit, network-manager
+Description: A simple pluging for Cockpit to manage
+  wireless network connections
