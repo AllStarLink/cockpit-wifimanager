@@ -74,7 +74,7 @@ function set_wifi_output(data) {
 
 // WiFi Get Connections Functions
 function get_wifi_run() {
-    cockpit.spawn(["/usr/share/cockpit/wifimanager/bin/wifi-list-configured.sh"] ,
+    cockpit.spawn(["/usr/share/cockpit/wifimanager/bin/wifi-list-configured.py"] ,
         { superuser: "require" } )
             .stream(get_wifi_output)
             .catch(get_wifi_fail);
@@ -84,16 +84,40 @@ function get_wifi_fail() {
 	conlist.innerHTML += `<span class="wifi-scan-error">WiFi set failed</scan>`;
 }
 
-function get_wifi_output(data){
-	const lines = data.split('\n');
-	conlist.innerHTML = "<ul>";
-	for (let l of lines) {
-		l = l.trim();
-		if(l){
-			conlist.innerHTML += `<li>${l}</li>`;
-		}
-	}
-	conlist.innerHTML += "</ul>";
+function get_wifi_output(dataStr){
+	const data = JSON.parse(dataStr);
+	if (!data.length) return;
+	const table = document.createElement('table');
+	table.classList.add("table");
+	table.classList.add("table-striped");
+	table.classList.add("table-hover");
+	const thead = document.createElement('thead');
+	const headerRow = document.createElement('tr');
+
+    // Create table headers
+    Object.keys(data[0]).forEach(key => {
+		const th = document.createElement('th');
+		th.setAttribute("scope","col");
+        th.textContent = key.toUpperCase();
+        headerRow.appendChild(th);
+    });
+	thead.appendChild(headerRow);
+	table.appendChild(thead);
+
+     // Create table rows
+	const tbody = document.createElement('tbody');
+    data.forEach(item => {
+        const row = document.createElement('tr');
+		const rs = [ "id" , "uuid" , "ssid" ];
+		rs.forEach( col => {
+            const td = document.createElement('td');
+            td.textContent = item[col];
+            row.appendChild(td);
+        });
+    	tbody.appendChild(row);
+    });
+	table.appendChild(tbody);
+	document.getElementById('wifi-conn-list').appendChild(table);
 }
 
 
