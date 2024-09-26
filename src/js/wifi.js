@@ -113,7 +113,7 @@ function get_wifi_run() {
 }
 
 function get_wifi_fail() {
-	conlist.innerHTML += `<span class="wifi-scan-error">WiFi set failed</scan>`;
+	conlist.innerHTML = `<span class="wifi-scan-error">WiFi set failed</scan>`;
 }
 
 function get_wifi_output(dataStr){
@@ -149,6 +149,7 @@ function get_wifi_output(dataStr){
     	tbody.appendChild(row);
     });
 	table.appendChild(tbody);
+	document.getElementById('wifi-conn-list').innerHTML = "";
 	document.getElementById('wifi-conn-list').appendChild(table);
 }
 
