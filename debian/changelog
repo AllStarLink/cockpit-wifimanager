@@ -1,5 +1,5 @@
-cockpit-wifimanager (1.0.0-1) UNRELEASED; urgency=medium
+cockpit-wifimanager (1.1.0-1) unstable; urgency=medium
 
-  * Initial
+  * Initial complete release
 
- -- Jason McCormick <jason@mfamily.org>  Sat, 21 Sep 2024 12:39:46 -0400
+ -- Jason McCormick <jason@mfamily.org>  Thu, 26 Sep 2024 18:33:28 -0400
