@@ -100,7 +100,7 @@ function set_wifi_fail() {
 }
 
 function set_wifi_output(data) {
-	setresult.innerHTML = `<pre>${data}</pre>`;
+	setresult.innerHTML = `${data}`;
 	get_wifi_run();
 }
 
