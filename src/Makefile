@@ -7,7 +7,7 @@ JS_DIR = js
 
 ROOT_FILES = index.html manifest.json
 
-BIN_FILES = $(wildcard $(BIN_DIR)/*.sh)
+BIN_FILES = $(wildcard $(BIN_DIR)/*.sh) $(wildcard $(BIN_DIR)/*.py)
 CSS_FILES = $(wildcard $(CSS_DIR)/*.css)
 JS_FILES = $(wildcard $(JS_DIR)/*.js)
 

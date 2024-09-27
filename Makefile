@@ -4,7 +4,7 @@
 SRCNAME = cockpit-wifimanager
 PKGNAME = $(SRCNAME)
 RELVER = 1.1.0
-DEBVER = 1
+DEBVER = 2
 RELPLAT ?= deb$(shell lsb_release -rs 2> /dev/null)
 ARCH ?= $(shell uname -m)
 
