@@ -3,6 +3,11 @@ import json
 import subprocess
 import sys
 
+# This profile is the AllStarLink fallback access point.  It exists so there
+# is always something to connect to when no configured network is reachable,
+# so it must stay the least preferred connection and must not be reordered.
+FALLBACK_CONNECTION = "asl-fallback-ap"
+
 
 def split_terse(line):
     """Split one nmcli --terse line into fields.
@@ -94,12 +99,14 @@ def get_wifi_connections():
             "ssid": get_ssid(uuid),
             "active": active,
             "device": device if active else None,
-            "priority": priority
+            "priority": priority,
+            "fallback": name == FALLBACK_CONNECTION
         })
 
     # NetworkManager prefers the highest autoconnect-priority, so show the
     # most-preferred network first.  Ties keep a stable, predictable order.
-    wifi_list.sort(key=lambda c: (-c["priority"], c["id"].lower()))
+    # The fallback AP is pinned last whatever priority it happens to carry.
+    wifi_list.sort(key=lambda c: (c["fallback"], -c["priority"], c["id"].lower()))
 
     return wifi_list
 

@@ -2,6 +2,12 @@
 
 const BIN = "/usr/share/cockpit/wifimanager/bin";
 
+// The AllStarLink fallback access point is what you land on when no
+// configured network is reachable, so it is pinned as the least preferred
+// connection and cannot be reordered.  wifi-set-priority.sh enforces this
+// too; the UI just avoids offering a move that would be overridden.
+const FALLBACK_CONNECTION = "asl-fallback-ap";
+
 const scanResults = document.getElementById("scan-results");
 const scanButton = document.getElementById("wifi-scan-btn");
 const scanStatus = document.getElementById("scan-status");
@@ -184,6 +190,10 @@ function wifiScanRun() {
 		});
 }
 
+function isFallback(item) {
+	return item.fallback === true || item.id === FALLBACK_CONNECTION;
+}
+
 function isOpenNetwork(item) {
 	const security = (item.security || "").trim();
 	return security === "" || security === "--";
@@ -347,9 +357,16 @@ function gripIcon() {
 	return svg;
 }
 
+function isLocked(row) {
+	return !!row && row.dataset.locked === "true";
+}
+
 function moveRow(row, delta) {
+	if (isLocked(row))
+		return false;
 	const sibling = delta < 0 ? row.previousElementSibling : row.nextElementSibling;
-	if (!sibling)
+	// A pinned row is a wall: nothing may be moved across it.
+	if (!sibling || isLocked(sibling))
 		return false;
 	if (delta < 0)
 		row.parentNode.insertBefore(row, sibling);
@@ -370,7 +387,7 @@ function dragOver(row, clientY) {
 	// pointer; if there is none, it belongs at the end.
 	let target = null;
 	for (const other of Array.from(tbody.children)) {
-		if (other === row)
+		if (other === row || isLocked(other))
 			continue;
 		const rect = other.getBoundingClientRect();
 		if (clientY < rect.top + (rect.height / 2)) {
@@ -378,6 +395,10 @@ function dragOver(row, clientY) {
 			break;
 		}
 	}
+
+	// Dragging past the end must still stop above any pinned row.
+	if (!target)
+		target = tbody.querySelector('tr[data-locked="true"]');
 
 	if (target !== row.nextSibling)
 		tbody.insertBefore(row, target);
@@ -387,6 +408,14 @@ function reorderHandle(item, disabled) {
 	const button = el("button", "pf-v6-c-button pf-m-plain wifi-grip");
 	button.type = "button";
 	button.appendChild(gripIcon());
+
+	if (isFallback(item)) {
+		button.disabled = true;
+		button.title = `${item.id} is the fallback access point and is always tried last.`;
+		button.setAttribute("aria-label", `${item.id} is pinned last and cannot be reordered.`);
+		return button;
+	}
+
 	button.setAttribute("aria-label",
 		`Reorder ${item.id}. Use the up and down arrow keys to change its priority.`);
 
@@ -480,7 +509,8 @@ function getWifiRun() {
 }
 
 function renderConnList(data) {
-	const single = data.length < 2;
+	// Only the reorderable networks count towards "is there anything to move".
+	const single = data.filter(item => !isFallback(item)).length < 2;
 	renderTable(connList, [
 		{
 			label: null,
@@ -495,6 +525,13 @@ function renderConnList(data) {
 				wrap.appendChild(el("span", null, item.id));
 				if (item.active)
 					wrap.appendChild(connectedLabel());
+				if (isFallback(item)) {
+					const label = el("span", "pf-v6-c-label pf-m-compact pf-m-outline");
+					const content = el("span", "pf-v6-c-label__content");
+					content.appendChild(el("span", "pf-v6-c-label__text", "Always last"));
+					label.appendChild(content);
+					wrap.appendChild(label);
+				}
 				return wrap;
 			}
 		},
@@ -521,7 +558,11 @@ function renderConnList(data) {
 	], data, "No WiFi networks configured.", {
 		tableClass: "wifi-conn-table",
 		rowClass: item => item.active ? "wifi-row-active" : "",
-		rowSetup: (row, item) => { row.dataset.uuid = item.uuid; }
+		rowSetup: (row, item) => {
+			row.dataset.uuid = item.uuid;
+			if (isFallback(item))
+				row.dataset.locked = "true";
+		}
 	});
 }
 

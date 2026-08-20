@@ -195,6 +195,14 @@ body {
 }
 
 /*
+ * PatternFly puts a grab cursor on every button in a draggable cell; a pinned
+ * row cannot be grabbed, so do not suggest otherwise.
+ */
+.wifi-grip:disabled {
+	cursor: not-allowed;
+}
+
+/*
  * In stacked mode the drag handle would otherwise sit alone on its own line
  * above the card; float it to the top corner so each card reads as one block.
  */
