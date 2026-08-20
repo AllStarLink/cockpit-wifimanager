@@ -1,48 +1,118 @@
+/*
+ * Plugin-specific styling.  Everything is expressed in PatternFly design
+ * tokens so that it follows cockpit's light/dark theme automatically -- do
+ * not hard-code colours here.
+ */
+
 body {
-	font-family: "RedHatText", "Overpass", overpass, helvetica, arial, sans-serif;
-	font-variant-numeric: tabular-nums;
-	padding: 10px;
+	background-color: var(--pf-t--global--background--color--primary--default);
+	color: var(--pf-t--global--text--color--regular);
+	font-family: var(--pf-t--global--font--family--body);
 }
 
-header {
-	font-size: 1.2em;
-	border-bottom-style: solid;
-	border-bottom-width: 1px;
-	margin-bottom: 5px;
+.wifi-page {
+	max-width: 60rem;
+	padding: var(--pf-t--global--spacer--md);
 }
 
-.wifi-scan-error {
-	color: red;
-	text-decoration: bold;
+@media (min-width: 768px) {
+	.wifi-page {
+		padding: var(--pf-t--global--spacer--lg);
+	}
 }
 
-.wifi-scan-loader-box {
+.wifi-muted {
+	color: var(--pf-t--global--text--color--subtle);
+}
+
+.wifi-spinner-box {
 	display: flex;
 	justify-content: center;
-	align-items: center;
-	height: 53px;
-	width: 53px;
-	background: black;
-	color: white;
-	padding: 5px;
+	padding: var(--pf-t--global--spacer--lg);
 }
 
-.wifi-scan-loader {
-    width: 48px;
-    height: 48px;
-    border: 5px solid #e0e0e0;
-    border-bottom-color: rgb(115,181,31);
-    border-radius: 50%;
-    display: inline-block;
-    box-sizing: border-box;
-    animation: rotation 1s linear infinite;
-    }
+.wifi-spinner-box .pf-v6-c-spinner {
+	--pf-v6-c-spinner--Width: 2.5rem;
+	--pf-v6-c-spinner--Height: 2.5rem;
+}
 
-    @keyframes rotation {
-    0% {
-        transform: rotate(0deg);
-    }
-    100% {
-        transform: rotate(360deg);
-    }
-} 
+/* Scan results -------------------------------------------------------- */
+
+.wifi-ssid-text {
+	font-weight: var(--pf-t--global--font--weight--body--bold);
+	overflow-wrap: anywhere;
+}
+
+.wifi-lock-icon {
+	width: 0.75em;
+	height: 0.75em;
+	margin-inline-start: var(--pf-t--global--spacer--sm);
+	color: var(--pf-t--global--icon--color--subtle);
+	vertical-align: baseline;
+}
+
+.wifi-signal {
+	display: flex;
+	gap: var(--pf-t--global--spacer--sm);
+	align-items: center;
+}
+
+.wifi-signal-bar {
+	position: relative;
+	flex: 0 0 4rem;
+	height: 0.5rem;
+	overflow: hidden;
+	background-color: var(--pf-t--global--background--color--secondary--default);
+	border-radius: var(--pf-t--global--border--radius--small);
+}
+
+.wifi-signal-fill {
+	display: block;
+	height: 100%;
+	background-color: var(--pf-t--global--color--brand--default);
+}
+
+.wifi-signal-text {
+	font-variant-numeric: tabular-nums;
+	color: var(--pf-t--global--text--color--subtle);
+}
+
+/*
+ * In pf-m-grid mode the table is a stack of cards, so the signal bar sits in
+ * a full-width cell and a fixed 4rem bar looks stranded next to its label.
+ */
+@media (max-width: 767px) {
+	.wifi-signal-bar {
+		flex: 1 1 auto;
+	}
+}
+
+/* Selected-network feedback ------------------------------------------- */
+
+/*
+ * Clicking a scanned network scrolls the form into view; the flash makes it
+ * obvious that the click landed somewhere else on the page.
+ */
+.wifi-flash .pf-v6-c-card {
+	animation: wifi-flash 1.2s ease-out;
+}
+
+@keyframes wifi-flash {
+	0% {
+		background-color: var(--pf-t--global--background--color--highlight--default);
+	}
+
+	100% {
+		background-color: var(--pf-t--global--background--color--primary--default);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.wifi-flash .pf-v6-c-card {
+		animation: none;
+	}
+}
+
+.wifi-scan-status {
+	margin-inline-start: var(--pf-t--global--spacer--md);
+}
