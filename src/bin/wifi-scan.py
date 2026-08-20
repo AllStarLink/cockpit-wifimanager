@@ -31,15 +31,29 @@ def split_terse(line):
     return fields
 
 
+def scan(fields):
+    return subprocess.check_output(
+        ["nmcli", "-f", fields, "-t", "-c", "no",
+         "dev", "wifi", "list", "--rescan", "yes"],
+        universal_newlines=True
+    )
+
+
 def get_wifi_networks():
-    # Run the nmcli command to get Wi-Fi networks
+    # ACTIVE marks the AP this radio is currently associated with.  Fall back
+    # to the original field list if an nmcli build does not know the field, so
+    # that an unsupported extra column can never break scanning outright.
+    have_active = True
     try:
-        output = subprocess.check_output(
-            ["nmcli", "-f", "ssid,signal,security", "-t", "-c", "no",
-             "dev", "wifi", "list", "--rescan", "yes"],
-            universal_newlines=True
-        )
-    except (subprocess.CalledProcessError, OSError) as e:
+        output = scan("ssid,signal,security,active")
+    except subprocess.CalledProcessError:
+        have_active = False
+        try:
+            output = scan("ssid,signal,security")
+        except (subprocess.CalledProcessError, OSError) as e:
+            print(f"Error executing nmcli command: {e}", file=sys.stderr)
+            return None
+    except OSError as e:
         print(f"Error executing nmcli command: {e}", file=sys.stderr)
         return None
 
@@ -54,6 +68,7 @@ def get_wifi_networks():
             continue
 
         ssid, signal, security = fields[0], fields[1], fields[2]
+        active = have_active and len(fields) > 3 and fields[3] == "yes"
 
         # Only add networks with a non-blank SSID
         if not ssid:
@@ -66,8 +81,15 @@ def get_wifi_networks():
 
         # Store the highest signal strength for each SSID, along with the
         # security of whichever BSS that was.
-        if ssid not in networks or networks[ssid]['signal'] < signal:
-            networks[ssid] = {'ssid': ssid, 'signal': signal, 'security': security}
+        # Keep the strongest BSS per SSID, but never let a stronger inactive
+        # BSS hide the fact that we are associated with this network.
+        existing = networks.get(ssid)
+        if existing is None or existing['signal'] < signal:
+            networks[ssid] = {'ssid': ssid, 'signal': signal,
+                              'security': security,
+                              'active': active or (existing or {}).get('active', False)}
+        elif active:
+            existing['active'] = True
 
     json_output = list(networks.values())
 

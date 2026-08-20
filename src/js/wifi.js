@@ -84,6 +84,14 @@ function spinnerNode(label) {
 	return box;
 }
 
+function connectedLabel() {
+	const label = el("span", "pf-v6-c-label pf-m-green pf-m-compact");
+	const content = el("span", "pf-v6-c-label__content");
+	content.appendChild(el("span", "pf-v6-c-label__text", "Connected"));
+	label.appendChild(content);
+	return label;
+}
+
 function lockIcon() {
 	const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
 	svg.setAttribute("class", "wifi-lock-icon");
@@ -101,9 +109,14 @@ function lockIcon() {
  * what makes the table collapse into stacked, labelled rows on a phone
  * instead of scrolling sideways.
  *
- * columns: [{ label, render(item) -> Node|string }]
+ * columns: [{ label, render(item) -> Node|string, cellClass }]
+ *   A null label makes the column headless: no visible header text and no
+ *   data-label, for control columns that would be noise when stacked.
+ * opts.rowClass: optional (item) -> string, for marking individual rows
+ * opts.rowSetup: optional (row, item) -> void, run after a row is built
  */
-function renderTable(container, columns, items, emptyText) {
+function renderTable(container, columns, items, emptyText, opts) {
+	opts = opts || {};
 	if (!items.length) {
 		container.replaceChildren(el("p", "wifi-muted", emptyText));
 		return;
@@ -111,13 +124,18 @@ function renderTable(container, columns, items, emptyText) {
 
 	// A plain data table: no role="grid", which would promise arrow-key
 	// navigation this page does not implement.
-	const table = el("table", "pf-v6-c-table pf-m-grid-md pf-m-compact");
+	const table = el("table", "pf-v6-c-table pf-m-grid-md pf-m-compact" +
+		(opts.tableClass ? ` ${opts.tableClass}` : ""));
 
 	const thead = el("thead", "pf-v6-c-table__thead");
 	const headerRow = el("tr", "pf-v6-c-table__tr");
 	columns.forEach(col => {
-		const th = el("th", "pf-v6-c-table__th", col.label);
+		const th = el("th", "pf-v6-c-table__th");
 		th.setAttribute("scope", "col");
+		if (col.label)
+			th.textContent = col.label;
+		else
+			th.appendChild(el("span", "pf-v6-screen-reader", col.srLabel || ""));
 		headerRow.appendChild(th);
 	});
 	thead.appendChild(headerRow);
@@ -125,10 +143,12 @@ function renderTable(container, columns, items, emptyText) {
 
 	const tbody = el("tbody", "pf-v6-c-table__tbody");
 	items.forEach(item => {
-		const row = el("tr", "pf-v6-c-table__tr");
+		const extra = opts.rowClass ? opts.rowClass(item) : "";
+		const row = el("tr", "pf-v6-c-table__tr" + (extra ? ` ${extra}` : ""));
 		columns.forEach(col => {
-			const td = el("td", "pf-v6-c-table__td");
-			td.setAttribute("data-label", col.label);
+			const td = el("td", "pf-v6-c-table__td" + (col.cellClass ? ` ${col.cellClass}` : ""));
+			if (col.label)
+				td.setAttribute("data-label", col.label);
 			const content = col.render(item);
 			if (content instanceof Node)
 				td.appendChild(content);
@@ -136,6 +156,8 @@ function renderTable(container, columns, items, emptyText) {
 				td.textContent = content;
 			row.appendChild(td);
 		});
+		if (opts.rowSetup)
+			opts.rowSetup(row, item);
 		tbody.appendChild(row);
 	});
 	table.appendChild(tbody);
@@ -184,8 +206,12 @@ function renderScanResults(data) {
 				content.appendChild(el("span", "wifi-ssid-text", item.ssid));
 				if (!isOpenNetwork(item))
 					content.appendChild(lockIcon());
+				if (item.active)
+					content.appendChild(connectedLabel());
 				button.appendChild(content);
-				button.setAttribute("aria-label", `Configure ${item.ssid}`);
+				button.setAttribute("aria-label", item.active
+					? `Reconfigure ${item.ssid}, currently connected`
+					: `Configure ${item.ssid}`);
 				button.addEventListener("click", () => selectNetwork(item));
 				return button;
 			}
@@ -215,7 +241,8 @@ function renderScanResults(data) {
 				return wrap;
 			}
 		}
-	], data, "No networks found.");
+	], data, "No networks found.",
+	{ rowClass: item => item.active ? "wifi-row-active" : "" });
 }
 
 /*
@@ -290,6 +317,157 @@ function setWifiRun() {
 		});
 }
 
+/* ---------- reordering ---------- */
+
+/*
+ * The list order is NetworkManager's connection.autoconnect-priority: the
+ * network at the top is the one it will prefer.  Dragging rewrites the whole
+ * order in a single call rather than nudging individual priorities.
+ *
+ * Pointer events are used rather than HTML5 drag-and-drop so that the same
+ * code path works with a mouse and with touch, and the handle also responds
+ * to the arrow keys so the list is reorderable without dragging at all.
+ */
+
+let commitTimer = null;
+
+function gripIcon() {
+	const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+	svg.setAttribute("class", "wifi-grip-icon");
+	svg.setAttribute("viewBox", "0 0 16 16");
+	svg.setAttribute("aria-hidden", "true");
+	svg.setAttribute("fill", "currentColor");
+	[[6, 3], [10, 3], [6, 8], [10, 8], [6, 13], [10, 13]].forEach(([cx, cy]) => {
+		const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+		dot.setAttribute("cx", cx);
+		dot.setAttribute("cy", cy);
+		dot.setAttribute("r", "1.4");
+		svg.appendChild(dot);
+	});
+	return svg;
+}
+
+function moveRow(row, delta) {
+	const sibling = delta < 0 ? row.previousElementSibling : row.nextElementSibling;
+	if (!sibling)
+		return false;
+	if (delta < 0)
+		row.parentNode.insertBefore(row, sibling);
+	else
+		row.parentNode.insertBefore(sibling, row);
+	return true;
+}
+
+/*
+ * Live-reorder while dragging.  This resolves the final position in one step
+ * rather than swapping with one neighbour at a time, so a fast drag lands
+ * where the pointer actually is instead of trailing one row behind it.
+ */
+function dragOver(row, clientY) {
+	const tbody = row.parentNode;
+
+	// The row goes before the first other row whose midpoint is below the
+	// pointer; if there is none, it belongs at the end.
+	let target = null;
+	for (const other of Array.from(tbody.children)) {
+		if (other === row)
+			continue;
+		const rect = other.getBoundingClientRect();
+		if (clientY < rect.top + (rect.height / 2)) {
+			target = other;
+			break;
+		}
+	}
+
+	if (target !== row.nextSibling)
+		tbody.insertBefore(row, target);
+}
+
+function reorderHandle(item, disabled) {
+	const button = el("button", "pf-v6-c-button pf-m-plain wifi-grip");
+	button.type = "button";
+	button.appendChild(gripIcon());
+	button.setAttribute("aria-label",
+		`Reorder ${item.id}. Use the up and down arrow keys to change its priority.`);
+
+	if (disabled) {
+		button.disabled = true;
+		button.title = "There is only one network to order.";
+		return button;
+	}
+
+	button.addEventListener("keydown", event => {
+		const delta = event.key === "ArrowUp" ? -1 : (event.key === "ArrowDown" ? 1 : 0);
+		if (!delta)
+			return;
+		event.preventDefault();
+		const row = button.closest("tr");
+		if (moveRow(row, delta)) {
+			// Moving the row detaches the handle, so put focus back on it.
+			button.focus();
+			scheduleCommit();
+		}
+	});
+
+	button.addEventListener("pointerdown", event => {
+		if (event.button !== 0)
+			return;
+		event.preventDefault();
+
+		const row = button.closest("tr");
+		const table = row.closest("table");
+		row.classList.add("pf-m-ghost-row");
+		table.classList.add("pf-m-drag-over");
+		button.setPointerCapture(event.pointerId);
+
+		const onMove = ev => dragOver(row, ev.clientY);
+		const onEnd = () => {
+			button.removeEventListener("pointermove", onMove);
+			button.removeEventListener("pointerup", onEnd);
+			button.removeEventListener("pointercancel", onEnd);
+			if (button.hasPointerCapture(event.pointerId))
+				button.releasePointerCapture(event.pointerId);
+			row.classList.remove("pf-m-ghost-row");
+			table.classList.remove("pf-m-drag-over");
+			scheduleCommit();
+		};
+
+		button.addEventListener("pointermove", onMove);
+		button.addEventListener("pointerup", onEnd);
+		button.addEventListener("pointercancel", onEnd);
+	});
+
+	return button;
+}
+
+// Coalesce repeated arrow-key presses into one write.
+function scheduleCommit() {
+	window.clearTimeout(commitTimer);
+	commitTimer = window.setTimeout(applyOrder, 400);
+}
+
+function applyOrder() {
+	const uuids = Array.from(connList.querySelectorAll("tbody tr"))
+		.map(row => row.dataset.uuid)
+		.filter(Boolean);
+	if (!uuids.length)
+		return;
+
+	const proc = cockpit.spawn([`${BIN}/wifi-set-priority.sh`],
+		{ superuser: "require", err: "message" });
+	proc.input(uuids.join("\n") + "\n");
+	proc.then(output => {
+		// The DOM already shows the order that was just written, so do not
+		// re-render: that would throw away keyboard focus mid-reorder.
+		showResult(delResult, "success", output.trim() || "Updated preferred order.");
+	})
+		.catch(err => {
+			showResult(delResult, "danger", `Could not save the order: ${err.message || err}`);
+			// Re-read so the list cannot drift from what is actually stored.
+			getWifiRun();
+		});
+}
+
 /* ---------- configured connections ---------- */
 
 function getWifiRun() {
@@ -302,22 +480,49 @@ function getWifiRun() {
 }
 
 function renderConnList(data) {
+	const single = data.length < 2;
 	renderTable(connList, [
-		{ label: "Connection", render: item => item.id },
+		{
+			label: null,
+			srLabel: "Reorder",
+			cellClass: "pf-v6-c-table__draggable",
+			render: item => reorderHandle(item, single)
+		},
+		{
+			label: "Connection",
+			render: item => {
+				const wrap = el("span", "wifi-conn-name");
+				wrap.appendChild(el("span", null, item.id));
+				if (item.active)
+					wrap.appendChild(connectedLabel());
+				return wrap;
+			}
+		},
 		{ label: "SSID", render: item => item.ssid || "" },
 		{
 			label: "Actions",
 			render: item => {
-				const button = el("button", "pf-v6-c-button pf-m-link pf-m-danger", "Delete");
+				const button = el("button", "pf-v6-c-button pf-m-link pf-m-inline pf-m-danger", "Delete");
 				button.type = "button";
 				button.setAttribute("aria-label", `Delete ${item.id}`);
-				// Delete by UUID: connection names are not unique and may
-				// contain characters that confuse a name lookup.
-				button.addEventListener("click", () => delWifiRun(item, button));
+				if (item.active) {
+					// wifi-del-configured.sh refuses to remove the active
+					// connection, so do not offer a click that can only fail.
+					button.disabled = true;
+					button.title = `${item.id} is the active connection and cannot be deleted.`;
+				} else {
+					// Delete by UUID: connection names are not unique and may
+					// contain characters that confuse a name lookup.
+					button.addEventListener("click", () => delWifiRun(item, button));
+				}
 				return button;
 			}
 		}
-	], data, "No WiFi networks configured.");
+	], data, "No WiFi networks configured.", {
+		tableClass: "wifi-conn-table",
+		rowClass: item => item.active ? "wifi-row-active" : "",
+		rowSetup: (row, item) => { row.dataset.uuid = item.uuid; }
+	});
 }
 
 function delWifiRun(item, button) {

@@ -2,9 +2,14 @@
 A plugin for [Cockpit](https://cockpit-project.org/) to manage WiFi connections.
 
 ## Description
-This is a simple plugin for Cockpit that enables the display, scanning, adding, and
-deleting of NetworkManager-based connection configurations that are of `type=wifi`.
-The plugin should be fairly self-evident how it works.
+This is a simple plugin for Cockpit that enables the display, scanning, adding,
+reordering, and deleting of NetworkManager-based connection configurations that
+are of `type=wifi`. The plugin should be fairly self-evident how it works.
+
+Configured networks can be reordered by dragging them, or by focusing a row's
+handle and using the arrow keys. The order is written to each connection's
+`connection.autoconnect-priority`, so the network at the top of the list is the
+one NetworkManager prefers.
 
 ## Installation
 

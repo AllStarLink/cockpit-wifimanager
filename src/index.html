@@ -20,7 +20,18 @@
 					<div class="pf-v6-c-card__title">
 						<h2 class="pf-v6-c-card__title-text">Configured WiFi Networks</h2>
 					</div>
-					<div class="pf-v6-c-card__body" id="wifi-conn-list"></div>
+					<div class="pf-v6-c-card__body">
+						<div class="pf-v6-c-helper-text wifi-order-hint">
+							<div class="pf-v6-c-helper-text__item">
+								<span class="pf-v6-c-helper-text__item-text">
+									Drag a network, or focus its handle and press the up and down arrow
+									keys, to change which one NetworkManager prefers. The network at the
+									top is tried first.
+								</span>
+							</div>
+						</div>
+						<div id="wifi-conn-list"></div>
+					</div>
 					<div class="pf-v6-c-card__footer">
 						<div id="del-wifi-results" aria-live="polite"></div>
 					</div>

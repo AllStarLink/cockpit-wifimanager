@@ -99,7 +99,7 @@ body {
 
 @keyframes wifi-flash {
 	0% {
-		background-color: var(--pf-t--global--background--color--highlight--default);
+		background-color: var(--pf-t--global--background--color--secondary--hover);
 	}
 
 	100% {
@@ -122,4 +122,94 @@ body {
 	flex-wrap: wrap;
 	gap: var(--pf-t--global--spacer--md);
 	align-items: center;
+}
+
+/* Active connection ---------------------------------------------------- */
+
+/*
+ * Marks the network this radio is currently associated with.  The tint is
+ * only a reinforcement -- the "Connected" badge carries the meaning, so the
+ * state is not conveyed by colour alone.
+ */
+.wifi-row-active > .pf-v6-c-table__td {
+	background-color: var(--pf-t--global--background--color--secondary--default);
+}
+
+.wifi-row-active > .pf-v6-c-table__td:first-child {
+	box-shadow: inset 0.25rem 0 0 0 var(--pf-t--global--color--brand--default);
+}
+
+/* In stacked (card) mode the row is a block, so tint it as a whole. */
+@media (max-width: 767px) {
+	.wifi-row-active {
+		background-color: var(--pf-t--global--background--color--secondary--default);
+		box-shadow: inset 0.25rem 0 0 0 var(--pf-t--global--color--brand--default);
+	}
+
+	.wifi-row-active > .pf-v6-c-table__td {
+		background-color: transparent;
+	}
+
+	.wifi-row-active > .pf-v6-c-table__td:first-child {
+		box-shadow: none;
+	}
+}
+
+.wifi-conn-name {
+	display: inline-flex;
+	flex-wrap: wrap;
+	gap: var(--pf-t--global--spacer--sm);
+	align-items: center;
+}
+
+/*
+ * The SSID cell carries the name plus up to two adornments (lock, Connected),
+ * so let them wrap as a group instead of stranding a badge on its own line.
+ */
+#scan-results .pf-v6-c-table__button-content {
+	display: inline-flex;
+	flex-wrap: wrap;
+	gap: var(--pf-t--global--spacer--sm);
+	align-items: center;
+}
+
+#scan-results .wifi-lock-icon {
+	margin-inline-start: 0;
+}
+
+/* Reordering ----------------------------------------------------------- */
+
+.wifi-grip {
+	/* Stop the browser from scrolling the page instead of starting a drag. */
+	touch-action: none;
+}
+
+.wifi-grip-icon {
+	width: 1em;
+	height: 1em;
+	color: var(--pf-t--global--icon--color--subtle);
+}
+
+.wifi-grip:disabled .wifi-grip-icon {
+	color: var(--pf-t--global--icon--color--disabled);
+}
+
+/*
+ * In stacked mode the drag handle would otherwise sit alone on its own line
+ * above the card; float it to the top corner so each card reads as one block.
+ */
+@media (max-width: 767px) {
+	.wifi-conn-table .pf-v6-c-table__tr {
+		position: relative;
+	}
+
+	.wifi-conn-table .pf-v6-c-table__draggable {
+		position: absolute;
+		inset-block-start: 0;
+		inset-inline-end: 0;
+	}
+}
+
+.wifi-order-hint {
+	margin-block-end: var(--pf-t--global--spacer--md);
 }
