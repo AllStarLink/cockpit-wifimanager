@@ -113,6 +113,13 @@ body {
 	}
 }
 
-.wifi-scan-status {
-	margin-inline-start: var(--pf-t--global--spacer--md);
+/*
+ * Keep the scan button and its status on one row where there is space, and
+ * let the status wrap as a whole unit rather than mid-sentence on a phone.
+ */
+.wifi-card-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--pf-t--global--spacer--md);
+	align-items: center;
 }
