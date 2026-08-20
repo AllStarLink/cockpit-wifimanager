@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>WiFi Manager</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<!-- Must run before the stylesheet paints, or the page flashes white
+	     when the shell is in dark mode. -->
+	<script src="js/cockpit-dark-theme.js"></script>
+	<link rel="stylesheet" type="text/css" href="css/patternfly.css">
+	<link rel="stylesheet" type="text/css" href="../../static/branding.css">
+	<link rel="stylesheet" type="text/css" href="css/wifi.css">
+</head>
+<body>
+	<main class="wifi-page">
+		<div class="pf-v6-l-stack pf-m-gutter">
+
+			<section class="pf-v6-l-stack__item">
+				<div class="pf-v6-c-card">
+					<div class="pf-v6-c-card__title">
+						<h2 class="pf-v6-c-card__title-text">Configured WiFi Networks</h2>
+					</div>
+					<div class="pf-v6-c-card__body" id="wifi-conn-list"></div>
+					<div class="pf-v6-c-card__footer">
+						<div id="del-wifi-results" aria-live="polite"></div>
+					</div>
+				</div>
+			</section>
+
+			<section class="pf-v6-l-stack__item">
+				<div class="pf-v6-c-card">
+					<div class="pf-v6-c-card__title">
+						<h2 class="pf-v6-c-card__title-text">Available WiFi Networks</h2>
+					</div>
+					<div class="pf-v6-c-card__body">
+						<div id="scan-results" class="scan-results">
+							<p class="wifi-muted">No current scan.</p>
+						</div>
+					</div>
+					<div class="pf-v6-c-card__footer wifi-card-actions">
+						<button id="wifi-scan-btn" type="button" class="pf-v6-c-button pf-m-secondary">
+							Scan for WiFi Networks
+						</button>
+						<span id="scan-status" class="wifi-muted" role="status"></span>
+					</div>
+				</div>
+			</section>
+
+			<section class="pf-v6-l-stack__item" id="wifi-form-card">
+				<div class="pf-v6-c-card">
+					<div class="pf-v6-c-card__title">
+						<h2 class="pf-v6-c-card__title-text">Configure a WiFi Network</h2>
+					</div>
+					<div class="pf-v6-c-card__body">
+						<form class="pf-v6-c-form" id="wifi-form" novalidate>
+							<div class="pf-v6-c-form__group">
+								<div class="pf-v6-c-form__group-label">
+									<label class="pf-v6-c-form__label" for="wifi-ssid">
+										<span class="pf-v6-c-form__label-text">Network name (SSID)</span>
+									</label>
+								</div>
+								<div class="pf-v6-c-form__group-control">
+									<span class="pf-v6-c-form-control" id="wifi-ssid-control">
+										<input type="text" id="wifi-ssid" name="wifi-ssid"
+											autocomplete="off" autocapitalize="none" spellcheck="false"
+											aria-describedby="wifi-ssid-help">
+									</span>
+									<div class="pf-v6-c-helper-text" id="wifi-ssid-help">
+										<div class="pf-v6-c-helper-text__item">
+											<span class="pf-v6-c-helper-text__item-text">
+												Saving an SSID that is already configured replaces the existing entry.
+											</span>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<div class="pf-v6-c-form__group" id="wifi-key-group">
+								<div class="pf-v6-c-form__group-label">
+									<label class="pf-v6-c-form__label" for="wifi-key">
+										<span class="pf-v6-c-form__label-text">Network password</span>
+									</label>
+								</div>
+								<div class="pf-v6-c-form__group-control">
+									<span class="pf-v6-c-form-control" id="wifi-key-control">
+										<input type="password" id="wifi-key" name="wifi-key"
+											autocomplete="off" aria-describedby="wifi-key-help">
+									</span>
+									<div class="pf-v6-c-helper-text" id="wifi-key-help">
+										<div class="pf-v6-c-helper-text__item">
+											<span class="pf-v6-c-helper-text__item-text" id="wifi-key-help-text">
+												Between 8 and 64 characters. Leave blank for an open network.
+											</span>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<div class="pf-v6-c-form__group pf-m-action">
+								<div class="pf-v6-c-form__actions">
+									<button id="set-wifi-btn" type="submit" class="pf-v6-c-button pf-m-primary">
+										Save Network
+									</button>
+								</div>
+							</div>
+						</form>
+						<div id="set-wifi-results" aria-live="polite"></div>
+					</div>
+				</div>
+			</section>
+
+		</div>
+	</main>
+	<script src="../base1/cockpit.js"></script>
+	<script src="js/wifi.js"></script>
+</body>
+</html>

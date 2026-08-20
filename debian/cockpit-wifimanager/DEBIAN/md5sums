@@ -1,0 +1,12 @@
+0f4c4ff72475dce5776860f787339334  usr/share/cockpit/wifimanager/bin/wifi-del-configured.sh
+f5c1d8999ed0f9bdca7209695e521e6f  usr/share/cockpit/wifimanager/bin/wifi-list-configured.py
+2bd2da5b80008400593bb0fa561bc223  usr/share/cockpit/wifimanager/bin/wifi-scan.py
+be50c95f1f315cf655f7c7f82ac95f8c  usr/share/cockpit/wifimanager/bin/wifi-set.sh
+a5c80481c4bac93d772bb40263026398  usr/share/cockpit/wifimanager/css/patternfly.css
+db8b7b2d2b8ebde07804fc39bfb69ade  usr/share/cockpit/wifimanager/css/wifi.css
+6722003555d77990d7df83c5c88780c8  usr/share/cockpit/wifimanager/index.html
+20eaf783eee3205a64200373a5c709a0  usr/share/cockpit/wifimanager/js/cockpit-dark-theme.js
+2be039f23a4e6005af99dd662bec043f  usr/share/cockpit/wifimanager/js/wifi.js
+447362e28cf1bac9b83089ff1e905aaf  usr/share/cockpit/wifimanager/manifest.json
+b640daa19888e12b433485b69517ead3  usr/share/doc/cockpit-wifimanager/changelog.Debian.gz
+35116e4950c2740e85c75c9e631581e8  usr/share/doc/cockpit-wifimanager/copyright
