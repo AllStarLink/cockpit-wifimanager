@@ -1,3 +1,11 @@
+cockpit-wifimanager (2.0-1) unstable; urgency=medium
+
+  * WiFi lists are now drag-to-order
+  * Click on scan fills in add box
+  * Use Cockpit-standard JS/CSS library 
+
+ -- Helium <jason@mfamily.org>  Fri, 21 Aug 2026 12:54:52 -0400
+
 cockpit-wifimanager (1.2.0-1) unstable; urgency=medium
 
   * Deal with Trixie installs that use netplan 
