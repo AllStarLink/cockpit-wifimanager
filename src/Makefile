@@ -29,7 +29,7 @@ $(WEBROOT)/css/%: $(CSS_DIR)/%
 $(WEBROOT)/bin/%: $(BIN_DIR)/%
 	install -D -m 0755  $< $@
 
-$(WEBROOT)/JS/%: $(JS_DIR)/%
+$(WEBROOT)/js/%: $(JS_DIR)/%
 	install -D -m 0644  $< $@
 
 $(WEBROOT)/%:	%

@@ -18,8 +18,8 @@ License: AGPL-3.0-only
  along with this program.  If not, see
  <https://www.gnu.org/licenses/agpl-3.0.txt>.
 
-Files: src/css/bootstrap* src/js/bootstrap*
-Copyright: 2011-2024 The Bootstrap Authors
+Files: src/css/patternfly.css
+Copyright: 2016-2025 Red Hat, Inc.
 License: MIT
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -39,4 +39,19 @@ License: MIT
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  THE SOFTWARE.
 
-
+Files: src/js/cockpit-dark-theme.js
+Copyright: 2022 Red Hat, Inc.
+License: LGPL-2.1-or-later
+ This library is free software; you can redistribute it and/or modify it
+ under the terms of the GNU Lesser General Public License as published by
+ the Free Software Foundation; either version 2.1 of the License, or (at
+ your option) any later version.
+ .
+ This library is distributed in the hope that it will be useful, but
+ WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser
+ General Public License for more details.
+ .
+ On Debian systems, the complete text of the GNU Lesser General Public
+ License version 2.1 can be found in
+ /usr/share/common-licenses/LGPL-2.1.
