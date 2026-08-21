@@ -59,11 +59,42 @@ function alertNode(variant, text) {
 	return wrapper;
 }
 
+let resultTimer = null;
+
 function showResult(container, variant, text) {
+	// Cancel any pending auto-dismiss, so a transient success cannot wipe a
+	// message that replaced it.
+	window.clearTimeout(resultTimer);
 	container.replaceChildren(alertNode(variant, text));
 }
 
+/*
+ * A success notice that clears itself.  Repeated reorders produce the same
+ * wording, so a message that simply stayed on screen could not tell you
+ * whether the second one saved; this way each save visibly re-appears.
+ * Only used for successes -- an error stays until something replaces it.
+ */
+function showTransientResult(container, variant, text, ms) {
+	window.clearTimeout(resultTimer);
+
+	const alert = alertNode(variant, text);
+	alert.classList.add("wifi-alert-in");
+	container.replaceChildren(alert);
+
+	resultTimer = window.setTimeout(() => {
+		// Leave it alone if something newer has taken its place.
+		if (container.firstChild !== alert)
+			return;
+		alert.classList.add("wifi-alert-out");
+		resultTimer = window.setTimeout(() => {
+			if (container.firstChild === alert)
+				container.replaceChildren();
+		}, 200);
+	}, ms);
+}
+
 function clearResult(container) {
+	window.clearTimeout(resultTimer);
 	container.replaceChildren();
 }
 
@@ -421,7 +452,7 @@ function reorderHandle(item, disabled) {
 
 	if (disabled) {
 		button.disabled = true;
-		button.title = "There is only one network to order.";
+		button.title = "There is only one reorderable network, so there is nothing to move.";
 		return button;
 	}
 
@@ -447,23 +478,38 @@ function reorderHandle(item, disabled) {
 		const table = row.closest("table");
 		row.classList.add("pf-m-ghost-row");
 		table.classList.add("pf-m-drag-over");
-		button.setPointerCapture(event.pointerId);
 
-		const onMove = ev => dragOver(row, ev.clientY);
-		const onEnd = () => {
-			button.removeEventListener("pointermove", onMove);
-			button.removeEventListener("pointerup", onEnd);
-			button.removeEventListener("pointercancel", onEnd);
-			if (button.hasPointerCapture(event.pointerId))
-				button.releasePointerCapture(event.pointerId);
+		/*
+		 * Listen on the document rather than on the handle.  Dragging
+		 * re-inserts the row that contains this button, and re-inserting a
+		 * node detaches it from the document for an instant, which is enough
+		 * for a browser to drop pointer capture -- Firefox does.  Once that
+		 * happens a handle-bound pointerup never arrives, the drag never
+		 * ends, and the new order is silently never saved.  Document-level
+		 * listeners receive the events either way.
+		 */
+		const pointerId = event.pointerId;
+
+		const onMove = ev => {
+			if (ev.pointerId !== pointerId)
+				return;
+			dragOver(row, ev.clientY);
+		};
+
+		const onEnd = ev => {
+			if (ev && ev.pointerId !== pointerId)
+				return;
+			document.removeEventListener("pointermove", onMove, true);
+			document.removeEventListener("pointerup", onEnd, true);
+			document.removeEventListener("pointercancel", onEnd, true);
 			row.classList.remove("pf-m-ghost-row");
 			table.classList.remove("pf-m-drag-over");
 			scheduleCommit();
 		};
 
-		button.addEventListener("pointermove", onMove);
-		button.addEventListener("pointerup", onEnd);
-		button.addEventListener("pointercancel", onEnd);
+		document.addEventListener("pointermove", onMove, true);
+		document.addEventListener("pointerup", onEnd, true);
+		document.addEventListener("pointercancel", onEnd, true);
 	});
 
 	return button;
@@ -479,8 +525,17 @@ function applyOrder() {
 	const uuids = Array.from(connList.querySelectorAll("tbody tr"))
 		.map(row => row.dataset.uuid)
 		.filter(Boolean);
-	if (!uuids.length)
+
+	// Never fail silently: a reorder that saves nothing and says nothing is
+	// indistinguishable from the feature being broken.
+	if (!uuids.length) {
+		showResult(delResult, "danger",
+			"Could not save the order: no connections were found to reorder.");
 		return;
+	}
+
+	console.debug("wifimanager: saving order", uuids);
+	clearResult(delResult);
 
 	const proc = cockpit.spawn([`${BIN}/wifi-set-priority.sh`],
 		{ superuser: "require", err: "message" });
@@ -488,9 +543,12 @@ function applyOrder() {
 	proc.then(output => {
 		// The DOM already shows the order that was just written, so do not
 		// re-render: that would throw away keyboard focus mid-reorder.
-		showResult(delResult, "success", output.trim() || "Updated preferred order.");
+		console.debug("wifimanager: order saved", output);
+		showTransientResult(delResult, "success",
+			output.trim() || "Updated preferred order.", 2000);
 	})
 		.catch(err => {
+			console.warn("wifimanager: saving order failed", err);
 			showResult(delResult, "danger", `Could not save the order: ${err.message || err}`);
 			// Re-read so the list cannot drift from what is actually stored.
 			getWifiRun();

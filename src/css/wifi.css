@@ -221,3 +221,42 @@ body {
 .wifi-order-hint {
 	margin-block-end: var(--pf-t--global--spacer--md);
 }
+
+/* Transient save notice ------------------------------------------------ */
+
+.wifi-alert-in {
+	animation: wifi-alert-in 200ms ease-out;
+}
+
+.wifi-alert-out {
+	animation: wifi-alert-out 200ms ease-in forwards;
+}
+
+@keyframes wifi-alert-in {
+	from {
+		opacity: 0;
+		transform: translateY(-0.25rem);
+	}
+
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+@keyframes wifi-alert-out {
+	from {
+		opacity: 1;
+	}
+
+	to {
+		opacity: 0;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.wifi-alert-in,
+	.wifi-alert-out {
+		animation: none;
+	}
+}
